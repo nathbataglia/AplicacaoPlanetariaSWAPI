@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aplicação Planetária</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div class="container">
+     
+        <h1>Aplicação Planetária</h1>
+        <h4> - Feito usando SWAPI - </h4>
+
+        <div>
+            <input type="text" id="nomePlaneta" placeholder="Digite o nome do planeta que deseja adicionar">
+            <button onclick="adicionarPlaneta()">Adicionar planeta</button>
+        </div>
+        <br><br>
+        <div>
+            <p>Clique no botão abaixo para listar os planetas cadastrados!</p>
+            <button onclick="listarPlanetas()">Listar planetas</button>
+            <ul id="listaPlanetas"></ul>
+        </div>
+        <br><br>
+        <div>
+            <input type="text" id="idPlaneta" placeholder="Digite o ID/Nome para buscar">
+            <button onclick="buscarPlaneta()">Buscar por ID ou Nome</button>
+            <div id="resultadoBusca"></div>
+        </div>
+        <br><br>
+        <div>
+            <input type="number" id="idRemover" placeholder="Digite o ID do planeta para remover">
+            <button onclick="removerPlaneta()">Remover planeta</button>
+        </div>
+    
+        <script>
+            async function adicionarPlaneta() {
+                const nome = document.getElementById('nomePlaneta').value;
+                await fetch('/planetas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: nome })
+                });
+                listarPlanetas();
+            }
+
+            async function listarPlanetas() {
+                const resposta = await fetch('/planetas');
+                const planetas = await resposta.json();
+                const lista = document.getElementById('listaPlanetas');
+                lista.innerHTML = planetas.map(planeta => `<li>Nome: ${planeta.nome || planeta.name}, \nClima: ${planeta.climate}, \nGravidade: ${planeta.gravity}, \nTerreno: ${planeta.terrain}</li>`).join('');
+            }
+
+            async function buscarPlaneta() {
+                const parametro = document.getElementById('idPlaneta').value;
+                const resposta = await fetch(`/planetas/busca/${parametro}`);
+                if (!resposta.ok) {
+                    document.getElementById('resultadoBusca').innerText = 'Planeta não encontrado';
+                    return;
+                }
+                const planeta = await resposta.json();
+                document.getElementById('resultadoBusca').innerText = (planeta.nome || planeta.name || 'Planeta não encontrado').concat(`, Clima: ${planeta.climate}, Gravidade: ${planeta.gravity}, Terreno: ${planeta.terrain}`);
+            }
+
+            async function removerPlaneta() {
+                const id = document.getElementById('idRemover').value;
+                const resposta = await fetch(`/planetas/${id}`, {
+                    method: 'DELETE'
+                });
+                if (resposta.ok) {
+                    const data = await resposta.json();
+                    alert(data.mensagem);
+                } else {
+                    alert('Planeta não encontrado ou não pode ser removido.');
+                }
+                listarPlanetas();
+            }
+            
+        </script>
+    </div>
+</body>
+</html>
